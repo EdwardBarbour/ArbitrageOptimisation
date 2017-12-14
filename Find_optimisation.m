@@ -11,11 +11,8 @@
 clc; clear all;
 % clear variables and screen 
 price = textread('Price_timeseries.txt', '%f');
-% load the data to be used
-% In the algorithm I use "price", hence I assign "price" to the relevant
-% variable in the loaded data
-% load spot_price_2013;
-% price = spot_price_2013/1000;
+% load the price data to be used
+% In the algorithm I use "price"
 
 % use prices in £/kWh for direct conversion
 
@@ -51,6 +48,8 @@ energy_stored = zeros(1,length(price)); energy_transfer = zeros(1,length(price))
 remove = ones(1,length(price));
 % this is a marker for each period in the timeseries, remove = 1 means the
 % period hasn't yet been removed
+
+tic
 
 while(any(remove)==1)
     
@@ -140,20 +139,14 @@ end
 
 end
 
+toc
+
 energy_input = zeros(1,length(energy_transfer));
 energy_input(energy_transfer<0) = energy_transfer(energy_transfer<0)*eta_discharge;
 energy_input(energy_transfer>0) = energy_transfer(energy_transfer>0)/eta_charge;
 
 % Plotting the energy stored, the energy transfer into and out of the
 % stores and the energy taken and returned from the network (called 'energy_input')
-
-time = linspace(1,length(energy_stored),length(energy_stored))/2;
-figure; 
-plot(time, energy_stored, time, 2*energy_transfer, time, 2*energy_input, time, price*1000)
-xlabel('time (hrs)')
-ylabel('energy-stored/energy-transfer (kWh/kW)')
-legend('energy stored', 'energy transfer', 'energy input', 'price (£/MWh)')
-title('Illustrating the optimum schedule of storage and charging/discharging')
 
 rev = zeros(1, length(price));
 for i = 1:length(price)
@@ -163,8 +156,18 @@ for i = 1:length(price)
         rev(i) = energy_transfer(i)*price(i)*eta_discharge;
     end
 end
-fprintf('%f \n', -sum(rev));
+% fprintf('%f \n', -sum(rev));
 
-mycall1 = num2str(-sum(rev));
-message = sprintf(['Revenue = £' mycall1]);
-uiwait(msgbox(message));
+time = linspace(1,length(energy_stored),length(energy_stored))/2;
+figure; 
+strRev = ['Revenue = ',num2str(-sum(rev))];
+plot(time, energy_stored, time, 2*energy_transfer, time, 2*energy_input, time, price*1000)
+text(1,-30,strRev,'HorizontalAlignment','left','fontsize',16);
+xlabel('time (hrs)')
+ylabel('energy-stored/energy-transfer (kWh/kW)')
+legend('energy stored', 'energy transfer', 'energy input', 'price (£/MWh)')
+title('Illustrating the optimum schedule of storage and charging/discharging')
+
+% mycall1 = num2str(-sum(rev));
+% message = sprintf(['Revenue = £' mycall1]);
+% uiwait(msgbox(message));
